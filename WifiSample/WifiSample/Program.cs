@@ -34,24 +34,19 @@ namespace WifiSample
         // Initialize the Sensor
         private static MPU6050 mpu6050 = new MPU6050();
         // Creating Object for gyro and accelerometer
-        private static AccelerationAndGyroData senorResult; 
+        private static AccelerationAndGyroData senorResult;
+        //Motor 1
+        private static NPWM motor1;
+        
    
         public static void Main()
         {
-
+           
             Init();
             while (true)
             {
-                        //string str =
-                        //   "aX: " + (Int16)senorResult.Acceleration_X + "\t; " +
-                        //   "aY: " + (Int16)senorResult.Acceleration_Y + "\t; " +
-                        //   "aZ: " + (Int16)senorResult.Acceleration_Z + "\t; " +
-                        //   "gX: " + (Int16)senorResult.Gyro_X + "\t; " +
-                        //   "gY: " + (Int16)senorResult.Gyro_Y + "\t; " +
-                        //   "gZ: " + (Int16)senorResult.Gyro_Z + "\t; " +
-                        //   "T: " + (Byte)((Int16)senorResult.Temperatur / 340 + 36.53);
-                        Write(mpu6050.GetSensorData().ToString());
-                        //Thread.Sleep(100);
+                //Write(mpu6050.GetSensorData().ToString());
+                //Thread.Sleep(800);
             }
         }
 
@@ -62,6 +57,9 @@ namespace WifiSample
             _wifiPt.DataReceived += new SerialDataReceivedEventHandler(rec_DataReceived);
             _wifiPt.Open();
             senorResult = mpu6050.GetSensorData();
+            Write(mpu6050.GetSensorData().ToString());
+            Write("Hello Alex!");
+            motor1 = new NPWM(Pins.GPIO_PIN_D5);
         }
 
        
@@ -98,15 +96,26 @@ namespace WifiSample
         #region Private Methods
         private static void ProcessReceivedString(string _buffer)
         {
-            if (_buffer == "ping")
+            try
             {
-                Write(_buffer);
+                ParseControllerInputs(_buffer);
             }
-            else
+            catch (Exception ex)
             {
-                uint val = UInt32.Parse(_buffer);
-                _led.SetDutyCycle(val);
+                Debug.Print("Error reading data on quad Data: " + _buffer);
+
             }
+        }
+
+        private static void ParseControllerInputs(String inpts)
+        {   
+            String[] mpuArray = inpts.Substring(1).Split('|');
+            updateMotor1(Convert.ToUInt32(mpuArray[0]));
+        }
+
+        private static void updateMotor1(uint val)
+        {
+            motor1.SetPulse(20000, 1000 + val);
         }
 
         private static void Write(string message)
@@ -115,6 +124,8 @@ namespace WifiSample
             _wifiPt.Write(bytes, 0, bytes.Length);
            
         }
+
+        
         #endregion
     }
 }

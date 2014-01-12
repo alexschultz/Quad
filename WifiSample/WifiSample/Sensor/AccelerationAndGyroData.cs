@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Text;
 namespace WifiSample.Sensor
 {
@@ -73,7 +74,7 @@ namespace WifiSample.Sensor
             rtnStr.Append("|");
             rtnStr.Append(Acceleration_Z);
             rtnStr.Append("|");
-            rtnStr.Append(Temperatur);
+            rtnStr.Append((Byte)((Int16)Temperatur / 340 + 36.53));
             rtnStr.Append("|");
             rtnStr.Append(Gyro_X);
             rtnStr.Append("|");
