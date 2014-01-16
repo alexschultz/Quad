@@ -35,9 +35,10 @@ namespace WifiSample
         private static MPU6050 mpu6050 = new MPU6050();
         // Creating Object for gyro and accelerometer
         private static AccelerationAndGyroData senorResult;
+        
         //Motor 1
         private static NPWM motor1;
-        
+        private static uint powerLevel = 0;
    
         public static void Main()
         {
@@ -45,14 +46,16 @@ namespace WifiSample
             Init();
             while (true)
             {
+                updateMotor1(powerLevel);
                 //Write(mpu6050.GetSensorData().ToString());
-                //Thread.Sleep(800);
+                Thread.Sleep(100);
             }
         }
 
         private static void Init()
         {
             _led = new NPWM(Pins.ONBOARD_LED);
+            powerLevel = 0;
             _wifiPt = new SerialPort(SerialPorts.COM1, 115200, Parity.None, 8, StopBits.One);
             _wifiPt.DataReceived += new SerialDataReceivedEventHandler(rec_DataReceived);
             _wifiPt.Open();
@@ -99,6 +102,7 @@ namespace WifiSample
             try
             {
                 ParseControllerInputs(_buffer);
+                Debug.Print(_buffer);
             }
             catch (Exception ex)
             {
@@ -109,13 +113,21 @@ namespace WifiSample
 
         private static void ParseControllerInputs(String inpts)
         {   
-            String[] mpuArray = inpts.Substring(1).Split('|');
-            updateMotor1(Convert.ToUInt32(mpuArray[0]));
+            String[] mpuArray = inpts.Split('|');
+            powerLevel = Convert.ToUInt32(mpuArray[0]);
         }
 
         private static void updateMotor1(uint val)
         {
-            motor1.SetPulse(20000, 1000 + val);
+            try
+            {
+
+                motor1.SetPulse(20000, 1000 + val);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+            }
         }
 
         private static void Write(string message)
