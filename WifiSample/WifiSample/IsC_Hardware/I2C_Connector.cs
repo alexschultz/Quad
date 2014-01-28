@@ -3,7 +3,7 @@ using Microsoft.SPOT;
 
 
 
-namespace WifiSample.I2C_Hardware
+namespace QuadCopter.I2C_Hardware
 {
     /// <summary>
     /// Einfache Klasse zum Verbinden eines Moduls mit dem I²C Bus.

@@ -9,17 +9,14 @@ using SecretLabs.NETMF.Hardware.Netduino;
 using System.IO.Ports;
 using System.Text;
 using NPWM = SecretLabs.NETMF.Hardware.PWM;
-using WifiSample.I2C_Hardware;
-using WifiSample.Sensor;
+using QuadCopter.I2C_Hardware;
+using QuadCopter.Sensor;
+using QuadCopter.pid;
 
-namespace WifiSample
+namespace QuadCopter
 {
-
-   
     public class Program
     {
-
-
         private enum readyState
         {
             standby,
@@ -35,34 +32,51 @@ namespace WifiSample
         private static MPU6050 mpu6050 = new MPU6050();
         // Creating Object for gyro and accelerometer
         private static AccelerationAndGyroData senorResult;
-        
-        //Motor 1
+        private static readyState commStatus;
+        private static pid.PIDLibrary.PID _pidController;
         private static NPWM motor1;
+        private static NPWM motor2;
+        private static NPWM motor3;
+        private static NPWM motor4;
         private static uint powerLevel = 0;
    
         public static void Main()
         {
-           
             Init();
             while (true)
             {
-                updateMotor1(powerLevel);
-                //Write(mpu6050.GetSensorData().ToString());
-                Thread.Sleep(100);
+                updateMotors(powerLevel);
+                Write(mpu6050.GetSensorData().ToString());
+                //Thread.Sleep(100);
             }
         }
 
         private static void Init()
         {
+            commStatus = readyState.standby;
             _led = new NPWM(Pins.ONBOARD_LED);
             powerLevel = 0;
             _wifiPt = new SerialPort(SerialPorts.COM1, 115200, Parity.None, 8, StopBits.One);
             _wifiPt.DataReceived += new SerialDataReceivedEventHandler(rec_DataReceived);
             _wifiPt.Open();
-            senorResult = mpu6050.GetSensorData();
-            Write(mpu6050.GetSensorData().ToString());
-            Write("Hello Alex!");
+            //_pidController = new pid.PIDLibrary.PID(0,0,0,0,0,0,0,0,0,0);
+
             motor1 = new NPWM(Pins.GPIO_PIN_D5);
+            motor2 = new NPWM(Pins.GPIO_PIN_D6);
+            motor3 = new NPWM(Pins.GPIO_PIN_D9);
+            motor4 = new NPWM(Pins.GPIO_PIN_D10);
+            Thread.Sleep(2000);
+            Write("Alex");
+            ConnectToBaseStation();
+        }
+
+        private static void ConnectToBaseStation()
+        {
+            //while (commStatus == readyState.standby)
+            //{
+            //    Write("Hello Alex!");
+ 
+            //}
         }
 
        
@@ -117,12 +131,16 @@ namespace WifiSample
             powerLevel = Convert.ToUInt32(mpuArray[0]);
         }
 
-        private static void updateMotor1(uint val)
+        private static void updateMotors(uint val)
         {
             try
             {
 
                 motor1.SetPulse(20000, 1000 + val);
+                motor2.SetPulse(20000, 1000 + val);
+                motor3.SetPulse(20000, 1000 + val);
+                motor4.SetPulse(20000, 1000 + val);
+                
             }
             catch (Exception ex)
             {
@@ -132,8 +150,15 @@ namespace WifiSample
 
         private static void Write(string message)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes("~" + message + "~");
-            _wifiPt.Write(bytes, 0, bytes.Length);
+            try
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes("~" + message + "~");
+                _wifiPt.Write(bytes, 0, bytes.Length);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+            }
            
         }
 

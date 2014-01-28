@@ -1,8 +1,8 @@
 using Microsoft.SPOT;
 using System.Threading;
-using WifiSample.I2C_Hardware;
+using QuadCopter.I2C_Hardware;
 
-namespace WifiSample.Sensor
+namespace QuadCopter.Sensor
 {
     public class MPU6050
     {
@@ -16,7 +16,7 @@ namespace WifiSample.Sensor
         public MPU6050()
         {
             Debug.Print("Initialize the accelerometer and gyro sensor MPU-6050");
-            _I2C = new I2C_Connector(0x68, 400);
+            _I2C = new I2C_Connector(0x68, 100);
 
             Initialize();
 
@@ -30,10 +30,25 @@ namespace WifiSample.Sensor
         /// </summary>
         public void Initialize()
         {
+
+            // Sensor initialize
+            // set the Sleep and Reset
             ErrorStatus(_I2C.Write(new byte[] { 0x6B, 0x80 }));
             Thread.Sleep(10);
+
+            // set out from sleep and set the clock to 
+            // gyroscope axis x
             ErrorStatus(_I2C.Write(new byte[] { 0x6B, 0x00 }));
+
             ErrorStatus(_I2C.Write(new byte[] { 0x1A, 0x06 }));
+
+            // Gyroscope setup
+            // set Gyrosope to 2000° per secound
+            ErrorStatus(_I2C.Write(new byte[] { 0x1B, 0x18 }));
+
+            // Acceleration setup
+            // set the acceleration to 8g
+            ErrorStatus(_I2C.Write(new byte[] { 0x1C, 0x10 }));
         }
         /// <summary>
         /// Returns an error status via Debug
@@ -72,5 +87,7 @@ namespace WifiSample.Sensor
             _I2C.Read(registerList);
             return new AccelerationAndGyroData(registerList);
         }
+
+        
     }
 }

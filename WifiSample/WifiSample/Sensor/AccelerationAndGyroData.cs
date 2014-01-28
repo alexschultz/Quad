@@ -1,13 +1,22 @@
 ﻿
 using System;
 using System.Text;
-namespace WifiSample.Sensor
+namespace QuadCopter.Sensor
 {
     /// <summary>
     /// Object to evaluate the results and provide the measured values.
     /// </summary>
     public struct AccelerationAndGyroData
     {
+
+
+        public static double Pitch { get; set; }
+
+        public static double Roll { get; set; }
+
+        public static double Yaw { get; set; }
+
+        
         /// <summary>
         /// X Achse des Beschleunigungssensors
         /// </summary>
@@ -36,6 +45,9 @@ namespace WifiSample.Sensor
         /// Z Achse des Gyroskop
         /// </summary>
         public int Gyro_Z;
+
+
+
         /// <summary>
         /// Creates the object with the results
         /// </summary>
@@ -54,6 +66,7 @@ namespace WifiSample.Sensor
             Gyro_X = (((int)results[8]) << 8) | results[9];
             Gyro_Y = (((int)results[10]) << 8) | results[11];
             Gyro_Z = (((int)results[12]) << 8) | results[13];
+            computeValues();
         }
         /// <summary>
         /// Override the ToString () method
@@ -62,25 +75,35 @@ namespace WifiSample.Sensor
         /// <returns></returns>
         public override string ToString()
         {
+            
             /*
              *The MPU data will be transmitted as small as possile 
              *The format will be ~Acceleration[X]|Acceleration[Y]| Acceleration[Z]|Temp|Gyro[X]|Gyro[Y]|Gyro[Z]~
              *i.e. ~2|4|72|95|100|100|100~
              */
+            //StringBuilder rtnStr = new StringBuilder("m");
+            //rtnStr.Append(Acceleration_X);
+            //rtnStr.Append("|");
+            //rtnStr.Append(Acceleration_Y);
+            //rtnStr.Append("|");
+            //rtnStr.Append(Acceleration_Z);
+            //rtnStr.Append("|");
+            //rtnStr.Append((Byte)((Int16)Temperatur / 340 + 36.53));
+            //rtnStr.Append("|");
+            //rtnStr.Append(Gyro_X);
+            //rtnStr.Append("|");
+            //rtnStr.Append(Gyro_Y);
+            //rtnStr.Append("|");
+            //rtnStr.Append(Gyro_Z);
+            //return rtnStr.ToString();
+
             StringBuilder rtnStr = new StringBuilder("m");
-            rtnStr.Append(Acceleration_X);
-            rtnStr.Append("|");
-            rtnStr.Append(Acceleration_Y);
-            rtnStr.Append("|");
-            rtnStr.Append(Acceleration_Z);
-            rtnStr.Append("|");
-            rtnStr.Append((Byte)((Int16)Temperatur / 340 + 36.53));
-            rtnStr.Append("|");
-            rtnStr.Append(Gyro_X);
-            rtnStr.Append("|");
-            rtnStr.Append(Gyro_Y);
-            rtnStr.Append("|");
-            rtnStr.Append(Gyro_Z);
+            rtnStr.Append("Roll: ");
+            rtnStr.Append((int)Roll);
+            rtnStr.Append(" Pitch: ");
+            rtnStr.Append((int)Pitch);
+            //rtnStr.Append(" Yaw: ");
+            //rtnStr.Append((int)Yaw);
             return rtnStr.ToString();
         }
         /// <summary>
@@ -88,11 +111,38 @@ namespace WifiSample.Sensor
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        private string GetProzent(int value)
+        private double GetDegrees(int value)
         {
             double d = (double)value;
-            //double result = System.Math.Round((d / 65535) * 100);
-            return d.ToString();
+            double result = (d / 4096) * 100;
+            //result = (result + 180) % 360;
+            return result;
+        }
+
+
+       
+
+        private void computeValues()
+        {
+            //double fXg = GetProzent(Acceleration_X);
+            //double fYg = GetProzent(Acceleration_Y);
+            //double fZg = GetProzent(Acceleration_Z);
+            //*x = ((buffer[0] + (buffer[1] << 8)) - zG[0]) / 256.0;
+
+            //Low Pass Filter
+            //fXg = Gyro_X * alpha + (fXg * (1.0 - alpha));
+            //fYg = Gyro_Y * alpha + (fYg * (1.0 - alpha));
+            //fZg = Gyro_Z * alpha + (fZg * (1.0 - alpha));
+
+            //Roll & Pitch Equations
+            //Roll = (Math.Atan2(-fYg, fZg) * 180.0) / Math.PI;
+            //Pitch = (Math.Atan2(fXg, Math.Sqrt(fYg * fYg + fZg * fZg)) * 180.0) / Math.PI;
+
+            Roll = GetDegrees(Acceleration_X);
+            Pitch = GetDegrees(Acceleration_Y);
+
+            //Yaw = GetDegrees(Acceleration_Z); 
+
         }
     }
 }
